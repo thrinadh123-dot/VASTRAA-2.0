@@ -1,0 +1,39 @@
+﻿server/config/passport.ts(18,39): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(filter?: _QueryFilter<{ username: string; email: string; password: string; googleId: string; role: NonNullable<"user" | "admin">; loginAttempts: number; lockUntil: NativeDate; createdAt: NativeDate; updatedAt: NativeDate; }> | undefined, projection?: ProjectionType<...> | ... 1 more ... | undefined, options?: (QueryOptions<...> & Abortable) | ... 1 more ... | undefined): Query<...>', gave the following error.
+    Argument of type '{ email: string | undefined; }' is not assignable to parameter of type '_QueryFilter<{ username: string; email: string; password: string; googleId: string; role: NonNullable<"user" | "admin">; loginAttempts: number; lockUntil: NativeDate; createdAt: NativeDate; updatedAt: NativeDate; }>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Type '{ email: string | undefined; }' is not assignable to type '{ username?: Condition<ApplyBasicQueryCasting<string>>; email?: Condition<ApplyBasicQueryCasting<string>>; ... 6 more ...; updatedAt?: Condition<...>; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+        Types of property 'email' are incompatible.
+          Type 'string | undefined' is not assignable to type 'Condition<ApplyBasicQueryCasting<string>>'.
+            Type 'undefined' is not assignable to type 'Condition<ApplyBasicQueryCasting<string>>'.
+  Overload 2 of 4, '(filter?: Query<any, any, {}, unknown, "find", Record<string, never>> | undefined, projection?: ProjectionType<{ username: string; email: string; role: "user" | "admin"; loginAttempts: number; password?: string | null; googleId?: string | null; lockUntil?: NativeDate | null; } & DefaultTimestampProps> | null | undefined, options?: (QueryOptions<...> & Abortable) | ... 1 more ... | undefined): Query<...>', gave the following error.
+    Object literal may only specify known properties, and 'email' does not exist in type 'Query<any, any, {}, unknown, "find", Record<string, never>>'.
+server/config/passport.ts(18,56): error TS2532: Object is possibly 'undefined'.
+server/config/passport.ts(24,36): error TS2339: Property 'save' does not exist on type '{ username: string; email: string; role: "user" | "admin"; loginAttempts: number; password?: string | null; googleId?: string | null; lockUntil?: NativeDate | null; createdAt: NativeDate; updatedAt: NativeDate; } & { ...; } & { ...; }'.
+server/config/passport.ts(30,42): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '{ username: string; email: string | undefined; googleId: string; }' is not assignable to parameter of type '{ username?: StringQueryTypeCasting; email?: StringQueryTypeCasting; role?: StringQueryTypeCasting; loginAttempts?: number; ... 5 more ...; _id?: ObjectId | { ...; }; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'email' are incompatible.
+        Type 'string | undefined' is not assignable to type 'StringQueryTypeCasting'.
+          Type 'undefined' is not assignable to type 'StringQueryTypeCasting'.
+server/config/passport.ts(32,28): error TS2532: Object is possibly 'undefined'.
+server/controllers/cartController.ts(50,28): error TS2532: Object is possibly 'undefined'.
+server/controllers/cartController.ts(54,13): error TS2532: Object is possibly 'undefined'.
+server/controllers/cartController.ts(55,13): error TS2532: Object is possibly 'undefined'.
+server/controllers/cartController.ts(56,13): error TS2532: Object is possibly 'undefined'.
+server/controllers/cartController.ts(57,13): error TS2532: Object is possibly 'undefined'.
+server/controllers/cartController.ts(100,5): error TS2532: Object is possibly 'undefined'.
+server/controllers/wishlistController.ts(113,13): error TS2532: Object is possibly 'undefined'.
+server/controllers/wishlistController.ts(114,13): error TS2532: Object is possibly 'undefined'.
+server/controllers/wishlistController.ts(115,13): error TS2532: Object is possibly 'undefined'.
+server/controllers/wishlistController.ts(116,13): error TS2532: Object is possibly 'undefined'.
+server/controllers/wishlistController.ts(163,13): error TS2532: Object is possibly 'undefined'.
+server/models/User.ts(51,16): error TS2349: This expression is not callable.
+  Type 'SaveOptions' has no call signatures.
+server/models_old/User.ts(33,9): error TS2349: This expression is not callable.
+  Type 'SaveOptions' has no call signatures.
+server/server.ts(24,9): error TS2349: This expression is not callable.
+  Type '{ default: <T extends e.CorsRequest = CorsRequest>(options?: CorsOptions | CorsOptionsDelegate<T> | undefined) => (req: T, res: { statusCode?: number | undefined; setHeader(key: string, value: string): any; end(): any; }, next: (err?: any) => any) => void; }' has no call signatures.
+server/server.ts(29,9): error TS2349: This expression is not callable.
+  Type 'typeof cookieParser' has no call signatures.
+server/server.ts(31,9): error TS2349: This expression is not callable.
+  Type 'typeof session' has no call signatures.

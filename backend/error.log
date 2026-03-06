@@ -1,0 +1,19 @@
+[dotenv@17.3.1] injecting env (7) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+C:\Users\thrin\OneDrive\Desktop\AD\Team_6\E-commerce\backend\node_modules\razorpay\dist\razorpay.js:34
+      throw new Error('`key_id` or `oauthToken` is mandatory');
+            ^
+
+Error: `key_id` or `oauthToken` is mandatory
+    at new Razorpay (C:\Users\thrin\OneDrive\Desktop\AD\Team_6\E-commerce\backend\node_modules\razorpay\dist\razorpay.js:34:13)
+    at Razorpay (C:\Users\thrin\OneDrive\Desktop\AD\Team_6\E-commerce\backend\server\config\razorpay.ts:6:18)
+    at Object.<anonymous> (C:\Users\thrin\OneDrive\Desktop\AD\Team_6\E-commerce\backend\server\config\razorpay.ts:11:16)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object.transformer (C:\Users\thrin\OneDrive\Desktop\AD\Team_6\E-commerce\backend\node_modules\tsx\dist\register-D46fvsV_.cjs:3:1104)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.require (node:internal/modules/cjs/loader:1311:12)
+
+Node.js v22.14.0
