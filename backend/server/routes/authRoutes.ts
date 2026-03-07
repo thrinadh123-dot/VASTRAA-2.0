@@ -19,7 +19,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 router.get(
     '/google/callback',
     passport.authenticate('google', {
-        failureRedirect: 'http://localhost:5173/login?error=GoogleAuthFailed',
+        failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=GoogleAuthFailed`,
         session: false,
     }),
     (req, res) => {
@@ -29,7 +29,7 @@ router.get(
         setTokenCookies(res, user);
 
         // Redirect back to frontend
-        res.redirect('http://localhost:5173');
+        res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
     }
 );
 

@@ -181,7 +181,8 @@ const LoginPage = () => {
     }, [location.search, navigate]);
 
     const handleGoogleSignIn = () => {
-        window.location.href = 'http://localhost:5000/api/auth/google';
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        window.location.href = `${apiUrl}/auth/google`;
     };
 
     const panel = LEFT_CONTENT[isLogin ? 'login' : 'register'];

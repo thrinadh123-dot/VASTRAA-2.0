@@ -52,21 +52,7 @@ export const register = createAsyncThunk(
     }
 );
 
-export const googleLogin = createAsyncThunk(
-    'auth/googleLogin',
-    async (token: string, { rejectWithValue }) => {
-        try {
-            const { data } = await api.post('/auth/google', { token });
-            return data;
-        } catch (error: any) {
-            return rejectWithValue(
-                error.response && error.response.data.message
-                    ? error.response.data.message
-                    : error.message
-            );
-        }
-    }
-);
+
 
 export const fetchUser = createAsyncThunk(
     'auth/fetchUser',
@@ -271,19 +257,7 @@ const authSlice = createSlice({
             state.error = action.payload as string;
         });
 
-        // Google Login
-        builder.addCase(googleLogin.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        });
-        builder.addCase(googleLogin.fulfilled, (state, action: PayloadAction<User>) => {
-            state.loading = false;
-            state.userInfo = action.payload;
-        });
-        builder.addCase(googleLogin.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
-        });
+
 
         // List Users (Admin)
         builder.addCase(listUsers.pending, (state) => {
