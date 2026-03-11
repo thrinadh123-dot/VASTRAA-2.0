@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import api from '../../services/api';
-import type { User } from '../../types';
+import api from '@/services/api';
+import type { User } from '@/types';
 
 interface AuthState {
     userInfo: User | null;
@@ -9,6 +9,7 @@ interface AuthState {
     loading: boolean;
     success: boolean; // For operation tracking
     error: string | null;
+    hasFetched: boolean; // Prevents duplicate fetchUser calls
 }
 
 const initialState: AuthState = {
@@ -17,6 +18,7 @@ const initialState: AuthState = {
     loading: false,
     success: false,
     error: null,
+    hasFetched: false,
 };
 
 // Async Thunks
@@ -67,6 +69,18 @@ export const fetchUser = createAsyncThunk(
                     : error.message
             );
         }
+    }
+);
+
+// Guard thunk: only fetches if not already loaded or in progress
+export const fetchUserIfNeeded = createAsyncThunk(
+    'auth/fetchUserIfNeeded',
+    async (_, { getState, dispatch }) => {
+        const state = getState() as { auth: AuthState };
+        if (!state.auth.hasFetched && !state.auth.loading) {
+            return dispatch(fetchUser()).unwrap();
+        }
+        return state.auth.userInfo;
     }
 );
 
@@ -206,10 +220,13 @@ const authSlice = createSlice({
         builder.addCase(fetchUser.fulfilled, (state, action: PayloadAction<User>) => {
             state.loading = false;
             state.userInfo = action.payload;
+            state.hasFetched = true;
         });
         builder.addCase(fetchUser.rejected, (state) => {
             state.loading = false;
             state.userInfo = null;
+            state.hasFetched = true; // Mark as fetched even on failure to prevent retries
+            localStorage.removeItem('token');
         });
 
         // logoutUser
@@ -221,12 +238,14 @@ const authSlice = createSlice({
             state.userInfo = null;
             state.error = null;
             state.users = [];
+            localStorage.removeItem('token');
         });
         builder.addCase(logoutUser.rejected, (state) => {
             state.loading = false;
             state.userInfo = null;
             state.error = null;
             state.users = [];
+            localStorage.removeItem('token');
         });
 
         // Login
@@ -237,6 +256,9 @@ const authSlice = createSlice({
         builder.addCase(login.fulfilled, (state, action: PayloadAction<User>) => {
             state.loading = false;
             state.userInfo = action.payload;
+            if (action.payload && action.payload.token) {
+                localStorage.setItem('token', action.payload.token);
+            }
         });
         builder.addCase(login.rejected, (state, action) => {
             state.loading = false;
@@ -251,6 +273,9 @@ const authSlice = createSlice({
         builder.addCase(register.fulfilled, (state, action: PayloadAction<User>) => {
             state.loading = false;
             state.userInfo = action.payload;
+            if (action.payload && action.payload.token) {
+                localStorage.setItem('token', action.payload.token);
+            }
         });
         builder.addCase(register.rejected, (state, action) => {
             state.loading = false;

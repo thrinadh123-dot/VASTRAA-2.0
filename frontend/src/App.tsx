@@ -1,17 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import 'react-toastify/dist/ReactToastify.css';
-import AppRouter from './routes/AppRouter';
-import { fetchUser } from './redux/slices/authSlice';
-import { mergeCart } from './redux/slices/cartSlice';
-import type { AppDispatch, RootState } from './redux';
+import AppRouter from '@/routes/AppRouter';
+import { fetchUserIfNeeded } from '@/redux/slices/authSlice';
+import { mergeCart } from '@/redux/slices/cartSlice';
+import type { AppDispatch, RootState } from '@/redux';
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
   const { userInfo } = useSelector((state: RootState) => state.auth);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    dispatch(fetchUser());
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      dispatch(fetchUserIfNeeded());
+    }
   }, [dispatch]);
 
   // Sync Guest Cart on Login

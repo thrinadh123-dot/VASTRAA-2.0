@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { listProducts } from '../redux/slices/productSlice';
-import { listUsers } from '../redux/slices/authSlice';
-import { listAllOrders } from '../redux/slices/orderSlice';
-import type { AppDispatch, RootState } from '../redux';
+import { listProducts } from '@/redux/slices/productSlice';
+import { listUsers } from '@/redux/slices/authSlice';
+import { listAllOrders } from '@/redux/slices/orderSlice';
+import type { AppDispatch, RootState } from '@/redux';
+import type { Product } from '@/types';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -12,7 +13,8 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'users'>('products');
 
     const { userInfo, users } = useSelector((state: RootState) => state.auth);
-    const { products } = useSelector((state: RootState) => state.products);
+    const { products: rawProducts } = useSelector((state: RootState) => state.products);
+    const products = Array.isArray(rawProducts) ? rawProducts : (rawProducts as any)?.products || [];
     const { allOrders, loading: loadingOrders } = useSelector((state: RootState) => state.orders);
 
     useEffect(() => {
@@ -28,7 +30,7 @@ const AdminDashboard = () => {
     if (!userInfo || userInfo.role !== 'admin') return null;
 
     // Derived stats
-    const totalSales = allOrders.reduce((acc, order) => acc + (order.isPaid ? order.totalPrice : 0), 0);
+    const totalSales = allOrders.reduce((acc, order) => acc + (order.paymentStatus === 'Paid' ? order.totalPrice : 0), 0);
     const totalOrders = allOrders.length;
     const totalUsers = users.length;
     const totalProducts = products.length;
@@ -97,7 +99,7 @@ const AdminDashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {products.map(p => (
+                                    {products.map((p: Product) => (
                                         <tr key={p._id} className="border-b border-gray-100 hover:bg-gray-50">
                                             <td className="py-3 px-4 text-xs font-mono text-gray-500">{p._id.substring(0, 8)}</td>
                                             <td className="py-3 px-4 font-medium">{p.name}</td>
@@ -130,13 +132,13 @@ const AdminDashboard = () => {
                                     ) : allOrders.map(order => (
                                         <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50">
                                             <td className="py-3 px-4 text-xs font-mono text-gray-500">{order._id.substring(0, 8)}</td>
-                                            <td className="py-3 px-4">{order.user?.username || order.user?.name || 'Customer'}</td>
+                                            <td className="py-3 px-4">{typeof order.user === 'object' ? (order.user?.name || order.user?.username) : 'Customer'}</td>
                                             <td className="py-3 px-4">{new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                                            <td className="py-3 px-4">₹{Math.round(order.totalPrice).toLocaleString('en-IN')}</td>
-                                            <td className="py-3 px-4">{order.isPaid ? '✅' : '❌'}</td>
-                                            <td className="py-3 px-4">{order.isDelivered ? '✅' : '❌'}</td>
+                                            <td className="py-3 px-4">₹{Math.round(order.totalAmount || order.totalPrice).toLocaleString('en-IN')}</td>
+                                            <td className="py-3 px-4">{order.paymentStatus === 'Paid' ? '✅' : '❌'}</td>
+                                            <td className="py-3 px-4">{order.deliveryStatus === 'Delivered' ? '✅' : '❌'}</td>
                                             <td className="py-3 px-4">
-                                                <button onClick={() => navigate(`/order/${order._id}`)} className="text-blue-600 hover:underline">View</button>
+                                                <button onClick={() => navigate(`/account/orders/${order._id}`)} className="text-blue-600 hover:underline">View</button>
                                             </td>
                                         </tr>
                                     ))}

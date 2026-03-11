@@ -1,19 +1,28 @@
 import rateLimit from 'express-rate-limit';
 
-// Global API Limiter: max 100 requests per 15 minutes per IP
-export const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests from this IP, please try again after 15 minutes',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+const isDev = process.env.NODE_ENV !== 'production';
 
-// Auth API Limiter: strict limits for login/register/refresh
-export const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 7, // Allow 7 attempts for auth routes
-    message: 'Too many authentication attempts from this IP, please try again after 15 minutes',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// In development, bypass rate limiting entirely
+const dummyLimiter = (req: any, res: any, next: any) => next();
+
+// Global API Limiter
+export const apiLimiter = isDev
+    ? dummyLimiter
+    : rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+        message: 'Too many requests from this IP, please try again after 15 minutes',
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
+
+// Auth API Limiter
+export const authLimiter = isDev
+    ? dummyLimiter
+    : rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 7,
+        message: 'Too many authentication attempts from this IP, please try again after 15 minutes',
+        standardHeaders: true,
+        legacyHeaders: false,
+    });

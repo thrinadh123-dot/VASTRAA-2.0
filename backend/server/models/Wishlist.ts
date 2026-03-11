@@ -1,29 +1,10 @@
 import mongoose from 'mongoose';
 
 const wishlistItemSchema = new mongoose.Schema({
-    productId: {
-        type: String, // Supports both MongoDB ObjectIds and custom string IDs
+    product: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
         required: true,
-    },
-    name: {
-        type: String,
-        required: true,
-    },
-    image: {
-        type: String,
-        required: true,
-    },
-    price: {
-        type: Number,
-        required: true,
-    },
-    category: {
-        type: String,
-        default: '',
-    },
-    brand: {
-        type: String,
-        default: '',
     },
 });
 

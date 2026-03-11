@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { toastService } from '../../services/toastService';
-import api from '../../services/api';
-import type { CartItem } from '../../types';
+import { toastService } from '@/services/toastService';
+import api from '@/services/api';
+import type { CartItem } from '@/types';
 
 interface CartState {
     items: CartItem[];
@@ -28,19 +28,29 @@ const initialState: CartState = {
     error: null,
 };
 
-const mapItems = (items: any[]): CartItem[] =>
-    items.map(item => ({
-        product: item.product?._id || item.product,
-        _id: item.product?._id || item.product, // Ensure _id is also present
-        name: item.product?.name || item.name || 'Product',
-        image: item.product?.images?.[0] || item.product?.image || item.image || '',
-        price: item.price ?? item.product?.price ?? 0,
-        originalPrice: item.originalPrice ?? item.product?.originalPrice,
-        stock: item.product?.stock ?? item.stock ?? 0,
-        quantity: item.quantity,
-        size: item.size,
-        color: item.color,
-    }));
+const mapItems = (items: any[]): CartItem[] => {
+    return items.reduce((acc, item) => {
+        const prodId = item.product?._id || item.product;
+        // Step 5: Ensure product exists before mapping
+        if (!prodId || (typeof item.product === 'object' && !item.product._id)) {
+            console.error("Invalid or deleted product detected in cart", item);
+            return acc;
+        }
+        acc.push({
+            product: prodId,
+            _id: prodId,
+            name: item.product?.name || item.name || 'Product',
+            image: item.product?.images?.[0] || item.product?.image || item.image || '',
+            price: item.price ?? item.product?.price ?? 0,
+            originalPrice: item.originalPrice ?? item.product?.originalPrice,
+            stock: item.product?.stock ?? item.stock ?? 0,
+            quantity: item.quantity || 1,
+            size: item.size || 'M',
+            color: item.color,
+        });
+        return acc;
+    }, [] as CartItem[]);
+};
 
 export const fetchCart = createAsyncThunk(
     'cart/fetchCart',
@@ -161,7 +171,12 @@ const cartSlice = createSlice({
         builder.addCase(fetchCart.pending, (state) => { state.loading = true; state.error = null; });
         builder.addCase(fetchCart.fulfilled, (state, action: PayloadAction<any[]>) => {
             state.loading = false;
-            state.items = mapItems(action.payload);
+            const backendItems = mapItems(action.payload);
+            // Preserve guest items (local-slug products not stored in backend)
+            const guestOnlyItems = state.items.filter(
+                existing => !/^[a-f\d]{24}$/i.test(existing.product)
+            );
+            state.items = [...backendItems, ...guestOnlyItems];
         });
         builder.addCase(fetchCart.rejected, (state, action) => {
             state.loading = false;

@@ -1,19 +1,23 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import api from '../../services/api';
-import type { Product } from '../../types';
+import api from '@/services/api';
+import type { Product } from '@/types';
 
 interface ProductState {
     products: Product[];
     productDetails: Product | null;
+    page: number;
+    pages: number;
     loading: boolean;
-    success: boolean; // Add success for UI feedback
+    success: boolean;
     error: string | null;
 }
 
 const initialState: ProductState = {
     products: [],
     productDetails: null,
+    page: 1,
+    pages: 1,
     loading: false,
     success: false,
     error: null,
@@ -22,9 +26,20 @@ const initialState: ProductState = {
 // Async Thunks
 export const listProducts = createAsyncThunk(
     'products/list',
-    async (keyword: string = '', { rejectWithValue }) => {
+    async (params: any = {}, { rejectWithValue }) => {
         try {
-            const { data } = await api.get(`/products${keyword ? `?keyword=${keyword}` : ''}`);
+            const query = new URLSearchParams();
+            if (params.keyword) query.append('keyword', params.keyword);
+            if (params.category && params.category !== 'All') query.append('category', params.category);
+            if (params.style) query.append('style', params.style);
+            if (params.price_gte) query.append('price_gte', params.price_gte.toString());
+            if (params.price_lte) query.append('price_lte', params.price_lte.toString());
+            if (params.sort) query.append('sort', params.sort);
+            if (params.page) query.append('page', params.page.toString());
+            if (params.limit) query.append('limit', params.limit.toString());
+            else query.append('limit', '8'); // Default limit
+
+            const { data } = await api.get(`/products?${query.toString()}`);
             return data;
         } catch (error: any) {
             return rejectWithValue(
@@ -119,9 +134,18 @@ const productSlice = createSlice({
             state.loading = true;
             state.error = null;
         });
-        builder.addCase(listProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
+        builder.addCase(listProducts.fulfilled, (state, action: PayloadAction<any>) => {
             state.loading = false;
-            state.products = action.payload;
+            // Handle both older array returns and newer paginated object returns
+            if (Array.isArray(action.payload)) {
+                state.products = action.payload;
+                state.page = 1;
+                state.pages = 1;
+            } else {
+                state.products = action.payload.products || [];
+                state.page = action.payload.page || 1;
+                state.pages = action.payload.pages || 1;
+            }
         });
         builder.addCase(listProducts.rejected, (state, action) => {
             state.loading = false;

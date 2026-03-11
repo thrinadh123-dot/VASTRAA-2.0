@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
-import Product from '../models/Product';
+import { productService } from '../services/productService';
 import asyncHandler from 'express-async-handler';
 import { ApiResponseHandler } from '../utils/apiResponse';
 
 export const getProducts = asyncHandler(async (req: any, res: Response) => {
-    const products = await Product.find({});
-    ApiResponseHandler.success(res, products, 'Products retrieved successfully');
+    const result = await productService.getAllProducts(req.query);
+    res.json(result);
 });
 
 export const getProductById = asyncHandler(async (req: any, res: Response) => {
-    const product = await Product.findById(req.params.id);
+    const product = await productService.findProductById(req.params.id);
     if (product) {
         let recommendedSize = null;
         const user = req.user;
@@ -64,26 +64,14 @@ export const getProductById = asyncHandler(async (req: any, res: Response) => {
 });
 
 export const createProduct = asyncHandler(async (req: any, res: Response) => {
-    const product = new Product({
-        name: 'Sample name',
-        price: 0,
-        user: (req as any).user._id,
-        images: ['/images/sample.jpg'],
-        sizes: ['M'],
-        category: 'Men',
-        stock: 0,
-        rating: 0,
-        description: 'Sample description',
-    });
-
-    const createdProduct = await product.save();
+    const createdProduct = await productService.createEmptyProduct((req as any).user._id);
     ApiResponseHandler.created(res, createdProduct, 'Product created successfully');
 });
 
 export const updateProduct = asyncHandler(async (req: any, res: Response) => {
     const { name, price, description, images, category, sizes, stock, image, countInStock } = req.body;
 
-    const product = await Product.findById(req.params.id);
+    const product = await productService.findProductById(req.params.id);
 
     if (product) {
         product.name = name;
@@ -109,7 +97,7 @@ export const updateProduct = asyncHandler(async (req: any, res: Response) => {
 
 export const updateProductStock = asyncHandler(async (req: any, res: Response) => {
     const { stock } = req.body;
-    const product = await Product.findById(req.params.id);
+    const product = await productService.findProductById(req.params.id);
 
     if (product) {
         if (stock === undefined || stock < 0) {
@@ -124,7 +112,7 @@ export const updateProductStock = asyncHandler(async (req: any, res: Response) =
 });
 
 export const deleteProduct = asyncHandler(async (req: any, res: Response) => {
-    const product = await Product.findById(req.params.id);
+    const product = await productService.findProductById(req.params.id);
 
     if (product) {
         await product.deleteOne();

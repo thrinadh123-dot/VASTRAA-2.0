@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FiEye, FiTruck, FiCheckCircle } from 'react-icons/fi';
-import { listAllOrders, updateOrderToShipped, updateOrderToDelivered, resetOrderState } from '../../redux/slices/orderSlice';
-import type { AppDispatch, RootState } from '../../redux';
+import { listAllOrders, updateOrderToShipped, updateOrderToDelivered, resetOrderState } from '@/redux/slices/orderSlice';
+import type { AppDispatch, RootState } from '@/redux';
 import { Link } from 'react-router-dom';
 
 const OrderListScreen = () => {
@@ -63,8 +63,12 @@ const OrderListScreen = () => {
                                         #{order._id.substring(order._id.length - 8).toUpperCase()}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <p className="font-medium text-gray-900">{order.user?.username || 'Guest'}</p>
-                                        <p className="text-[10px] text-gray-400 font-medium">{order.user?.email}</p>
+                                        <p className="font-medium text-gray-900">
+                                            {typeof order.user === 'object' ? (order.user?.name || order.user?.username) : 'Guest'}
+                                        </p>
+                                        <p className="text-[10px] text-gray-400 font-medium">
+                                            {typeof order.user === 'object' ? order.user?.email : ''}
+                                        </p>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600">
                                         {new Date(order.createdAt).toLocaleDateString()}
@@ -78,24 +82,24 @@ const OrderListScreen = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${order.deliveryStatus === 'Delivered' ? 'bg-blue-100 text-blue-600' :
-                                                order.deliveryStatus === 'Shipped' ? 'bg-yellow-100 text-yellow-600' :
-                                                    'bg-gray-100 text-gray-600'
+                                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${(order.status || order.deliveryStatus) === 'delivered' ? 'bg-green-100 text-green-600' :
+                                            (order.status || order.deliveryStatus) === 'shipped' ? 'bg-yellow-100 text-yellow-600' :
+                                                'bg-gray-100 text-gray-600'
                                             }`}>
-                                            {order.deliveryStatus}
+                                            {order.status || order.deliveryStatus}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end space-x-2">
                                             <Link
-                                                to={`/order/${order._id}`}
+                                                to={`/account/orders/${order._id}`}
                                                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                 title="View Details"
                                             >
                                                 <FiEye className="w-5 h-5" />
                                             </Link>
 
-                                            {order.deliveryStatus === 'Pending' && order.paymentStatus === 'Paid' && (
+                                            {((order.status || order.deliveryStatus) === 'processing' || (order.status || order.deliveryStatus) === 'confirmed') && order.paymentStatus === 'Paid' && (
                                                 <button
                                                     onClick={() => shipHandler(order._id)}
                                                     className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all"
@@ -105,7 +109,7 @@ const OrderListScreen = () => {
                                                 </button>
                                             )}
 
-                                            {order.deliveryStatus === 'Shipped' && (
+                                            {(order.status || order.deliveryStatus) === 'shipped' && (
                                                 <button
                                                     onClick={() => deliverHandler(order._id)}
                                                     className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"

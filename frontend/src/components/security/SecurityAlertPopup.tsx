@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import './securityAlert.css';
+import '@/components/security/securityAlert.css';
 
 /* ── Types ──────────────────────────────────────────────────────── */
 interface AlertData {

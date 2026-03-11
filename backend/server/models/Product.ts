@@ -12,6 +12,10 @@ const reviewSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const productSchema = new mongoose.Schema({
+    frontendId: {
+        type: String,
+        unique: true,
+    },
     name: {
         type: String,
         required: true,
@@ -77,6 +81,22 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    isNewDrop: {
+        type: Boolean,
+        default: false,
+    },
+    isBestseller: {
+        type: Boolean,
+        default: false,
+    },
+    season: {
+        type: String,
+        enum: ['summer', 'winter', 'all'],
+        default: 'all',
+    },
+    styleTags: [{
+        type: String,
+    }],
     reviews: [reviewSchema],
 }, {
     timestamps: true,

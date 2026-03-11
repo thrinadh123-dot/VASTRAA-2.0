@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
-import User from '../models/User';
+import { authService } from '../services/authService';
 import { generateAccessToken, generateRefreshToken } from '../utils/generateTokens';
 import { cookieOptionsAccess, cookieOptionsRefresh } from '../config/cookieOptions';
 import asyncHandler from 'express-async-handler';
@@ -10,14 +10,17 @@ export const setTokenCookies = (res: Response, user: any) => {
     const accessToken = generateAccessToken(user._id.toString());
     const refreshToken = generateRefreshToken(user._id.toString());
 
+    console.log('Setting tokens for user:', user.email);
     res.cookie('accessToken', accessToken, cookieOptionsAccess);
     res.cookie('refreshToken', refreshToken, cookieOptionsRefresh);
+
+    return accessToken;
 };
 
 export const authUser = asyncHandler(async (req: any, res: Response) => {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await authService.findUserByEmail(email);
 
     if (!user) {
         return ApiResponseHandler.unauthorized(res, 'Invalid email or password');
@@ -44,39 +47,41 @@ export const authUser = asyncHandler(async (req: any, res: Response) => {
     user.lockUntil = null as any;
     await user.save();
 
-    setTokenCookies(res, user);
+    const token = setTokenCookies(res, user);
 
     ApiResponseHandler.success(res, {
         _id: user._id,
         username: user.username,
         email: user.email,
         role: user.role,
+        token,
     }, 'Login successful');
 });
 
 export const registerUser = asyncHandler(async (req: any, res: Response) => {
     const { username, email, password } = req.body;
 
-    const userExists = await User.findOne({ email });
+    const userExists = await authService.findUserByEmail(email);
 
     if (userExists) {
         return ApiResponseHandler.error(res, 'User already exists', 400);
     }
 
-    const user = await User.create({
+    const user = await authService.createUser({
         username,
         email,
         password,
     });
 
     if (user) {
-        setTokenCookies(res, user);
+        const token = setTokenCookies(res, user);
 
         ApiResponseHandler.created(res, {
             _id: user._id,
             username: user.username,
             email: user.email,
             role: user.role,
+            token,
         }, 'User registered successfully');
     } else {
         ApiResponseHandler.error(res, 'Invalid user data', 400);
@@ -85,12 +90,17 @@ export const registerUser = asyncHandler(async (req: any, res: Response) => {
 
 export const refreshTokens = asyncHandler(async (req: any, res: Response) => {
     const token = req.cookies.refreshToken;
+    console.log('Refresh request - Cookies:', req.cookies);
+    console.log('Refresh request - Refresh token found:', !!token);
+
     if (!token) {
+        console.log('Refresh request - No refresh token provided');
         return ApiResponseHandler.unauthorized(res, 'No refresh token provided');
     }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as any;
+        console.log('Refresh request - Token decoded, user ID:', decoded.id);
 
         const newAccessToken = generateAccessToken(decoded.id);
         const newRefreshToken = generateRefreshToken(decoded.id); // Rotating refresh token
@@ -99,10 +109,12 @@ export const refreshTokens = asyncHandler(async (req: any, res: Response) => {
         res.cookie("refreshToken", newRefreshToken, cookieOptionsRefresh);
 
         ApiResponseHandler.success(res, {
-            message: 'Tokens refreshed'
+            message: 'Tokens refreshed',
+            token: newAccessToken
         }, 'Tokens refreshed successfully');
-    } catch {
-        ApiResponseHandler.forbidden(res, 'Invalid refresh token');
+    } catch (error) {
+        console.error('Refresh request - Error:', error);
+        ApiResponseHandler.unauthorized(res, 'Invalid refresh token'); // Standard 401
     }
 });
 
@@ -115,7 +127,7 @@ export const logoutUser = (req: any, res: Response) => {
 export const getUserProfile = asyncHandler(async (req: any, res: Response) => {
     // If protect middleware already fetched the user, we can use it directly
     // Otherwise, fetch it (fallback)
-    const user = req.user && req.user.toObject ? req.user : await User.findById(req.user._id).select('-password');
+    const user = req.user && req.user.toObject ? req.user : await authService.findUserByIdWithoutPassword(req.user._id);
 
     if (user) {
         // Step 1: Migration Logic for backward compatibility
@@ -155,7 +167,7 @@ export const getUserProfile = asyncHandler(async (req: any, res: Response) => {
 });
 
 export const getUsers = asyncHandler(async (req: any, res: Response) => {
-    const users = await User.find({}).select('-password');
+    const users = await authService.getAllUsers();
     ApiResponseHandler.success(res, users, 'Users retrieved successfully');
 });
 
@@ -165,7 +177,7 @@ export const getUsers = asyncHandler(async (req: any, res: Response) => {
  * @access  Private/Admin
  */
 export const deleteUser = asyncHandler(async (req: any, res: Response) => {
-    const user = await User.findById(req.params.id);
+    const user = await authService.findUserById(req.params.id);
 
     if (user) {
         if (user.role === 'admin') {
@@ -184,7 +196,7 @@ export const deleteUser = asyncHandler(async (req: any, res: Response) => {
  * @access  Private
  */
 export const updateUserProfile = asyncHandler(async (req: any, res: Response) => {
-    const user = await User.findById(req.user._id);
+    const user = await authService.findUserById(req.user._id);
 
     if (user) {
         user.username = req.body.username || user.username;
@@ -219,7 +231,7 @@ export const updateUserProfile = asyncHandler(async (req: any, res: Response) =>
  * @access  Private
  */
 export const updateUserSizes = asyncHandler(async (req: any, res: Response) => {
-    const user = await User.findById(req.user._id);
+    const user = await authService.findUserById(req.user._id);
 
     if (user) {
         const { gender, data } = req.body;
@@ -261,7 +273,7 @@ export const updateUserSizes = asyncHandler(async (req: any, res: Response) => {
  * @access  Private
  */
 export const deleteMyAccount = asyncHandler(async (req: any, res: Response) => {
-    const user = await User.findById(req.user._id);
+    const user = await authService.findUserById(req.user._id);
     if (user) {
         await user.deleteOne();
         res.clearCookie("accessToken", cookieOptionsAccess);
@@ -279,7 +291,7 @@ export const deleteMyAccount = asyncHandler(async (req: any, res: Response) => {
  */
 export const updateUserRole = asyncHandler(async (req: any, res: Response) => {
     const { role } = req.body;
-    const user = await User.findById(req.params.id);
+    const user = await authService.findUserById(req.params.id);
 
     if (user) {
         user.role = role || user.role;

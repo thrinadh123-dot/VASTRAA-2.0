@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { toast } from 'react-toastify';
-import api from '../../services/api';
+import { toastService } from '@/services/toastService';
+import api from '@/services/api';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 export interface WishlistProduct {
@@ -32,7 +32,19 @@ export const fetchWishlist = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const { data } = await api.get('/wishlist');
-            return data.products || [];
+            const products = data.products || [];
+            return products.map((item: any) => {
+                const p = item.product || {};
+                return {
+                    _id: item._id,
+                    productId: p._id || '',
+                    name: p.name || 'Unknown Product',
+                    image: p.images?.[0] || '',
+                    price: p.price || 0,
+                    category: p.category || '',
+                    brand: p.brand || ''
+                };
+            });
         } catch (error: any) {
             if (error.response?.status === 401) return [];
             const message = error.message || error.response?.data?.message || 'Failed to fetch wishlist';
@@ -49,17 +61,27 @@ export const addToWishlist = createAsyncThunk(
         price?: number;
         image?: string;
         category?: string;
-        description?: string;
-        stock?: number;
     }, { rejectWithValue }) => {
         try {
-            const { data } = await api.post('/wishlist/add', payload);
-            toast.success('Added to wishlist ♥');
-            return data.products;
+            const { data } = await api.post('/wishlist', payload);
+            toastService.success('Added to wishlist ♥');
+
+            const products = data.products || [];
+            return products.map((item: any) => {
+                const p = item.product || {};
+                return {
+                    _id: item._id,
+                    productId: p._id || '',
+                    name: p.name || 'Unknown Product',
+                    image: p.images?.[0] || '',
+                    price: p.price || 0,
+                    category: p.category || '',
+                    brand: p.brand || ''
+                };
+            });
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to add to wishlist';
-            toast.error(message);
-            return rejectWithValue(message);
+            toastService.error('Failed to add to wishlist');
+            return rejectWithValue(error.response?.data || error.message);
         }
     }
 );
@@ -68,11 +90,23 @@ export const removeFromWishlist = createAsyncThunk(
     'wishlist/remove',
     async (productId: string, { rejectWithValue }) => {
         try {
-            const { data } = await api.delete(`/wishlist/remove/${productId}`);
-            return data.products;
+            const { data } = await api.delete(`/wishlist/${productId}`);
+            const products = data.products || [];
+            return products.map((item: any) => {
+                const p = item.product || {};
+                return {
+                    _id: item._id,
+                    productId: p._id || '',
+                    name: p.name || 'Unknown Product',
+                    image: p.images?.[0] || '',
+                    price: p.price || 0,
+                    category: p.category || '',
+                    brand: p.brand || ''
+                };
+            });
         } catch (error: any) {
             const message = error.message || error.response?.data?.message || 'Failed to remove from wishlist';
-            toast.error(message);
+            toastService.error(message);
             return rejectWithValue(message);
         }
     }
@@ -80,14 +114,14 @@ export const removeFromWishlist = createAsyncThunk(
 
 export const moveWishlistToCart = createAsyncThunk(
     'wishlist/moveToCart',
-    async (payload: { product: string; size: string; quantity?: number }, { rejectWithValue }) => {
+    async (payload: { productId: string; size: string; quantity?: number }, { rejectWithValue }) => {
         try {
             const { data } = await api.post('/wishlist/move-to-cart', payload);
-            toast.success('Moved to cart');
+            toastService.success('Moved to cart');
             return data;
         } catch (error: any) {
             const message = error.response?.data?.message || 'Failed to move to cart';
-            toast.error(message);
+            toastService.error(message);
             return rejectWithValue(message);
         }
     }
@@ -101,7 +135,7 @@ export const moveAllWishlistToCart = createAsyncThunk(
             return data;
         } catch (error: any) {
             const message = error.message || error.response?.data?.message || 'Failed to move all to cart';
-            toast.error(message);
+            toastService.error(message);
             return rejectWithValue(message);
         }
     }

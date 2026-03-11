@@ -60,6 +60,30 @@ const userSchema = new mongoose.Schema({
     lockUntil: {
         type: Date,
     },
+    addresses: [
+        {
+            name: { type: String, required: true },
+            phone: { type: String, required: true },
+            addressLine1: { type: String, required: true },
+            addressLine2: { type: String },
+            city: { type: String, required: true },
+            state: { type: String, required: true },
+            postalCode: { type: String, required: true },
+            country: { type: String, default: 'India' },
+            isDefault: {
+                type: Boolean,
+                default: false
+            },
+            label: {
+                type: String,
+                default: 'Home'
+            },
+            createdAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ],
 }, {
     timestamps: true,
 });

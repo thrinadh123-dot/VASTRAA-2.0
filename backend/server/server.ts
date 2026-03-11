@@ -16,6 +16,8 @@ import cartRoutes from './routes/cartRoutes';
 import wishlistRoutes from './routes/wishlistRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
+
+import userRoutes from './routes/userRoutes';
 import { notFound, errorHandler } from './middleware/errorMiddleware';
 
 
@@ -66,6 +68,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/users', userRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

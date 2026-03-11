@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { logoutUser } from '../../redux/slices/authSlice';
-import type { AppDispatch } from '../../redux';
+import { logoutUser } from '@/redux/slices/authSlice';
+import type { AppDispatch } from '@/redux';
 import { FiHome, FiBox, FiUsers, FiShoppingBag, FiLogOut, FiActivity } from 'react-icons/fi';
 
 const AdminLayout = () => {

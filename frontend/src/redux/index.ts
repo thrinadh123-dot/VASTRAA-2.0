@@ -1,9 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './slices/authSlice';
-import productReducer from './slices/productSlice';
-import cartReducer from './slices/cartSlice';
-import orderReducer from './slices/orderSlice';
-import wishlistReducer from './slices/wishlistSlice';
+import authReducer from '@/redux/slices/authSlice';
+import productReducer from '@/redux/slices/productSlice';
+import cartReducer from '@/redux/slices/cartSlice';
+import orderReducer from '@/redux/slices/orderSlice';
+import wishlistReducer from '@/redux/slices/wishlistSlice';
+import addressReducer from '@/redux/slices/addressSlice';
 
 const store = configureStore({
     reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
         cart: cartReducer,
         orders: orderReducer,
         wishlist: wishlistReducer,
+        address: addressReducer,
     },
     devTools: import.meta.env.MODE !== 'production',
 });

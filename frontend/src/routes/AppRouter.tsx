@@ -2,49 +2,44 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import MainLayout from '../layouts/MainLayout';
-import AuthLayout from '../layouts/AuthLayout';
-import { ProtectedRoute, AdminRoute } from './ProtectedRoutes';
-import ScrollToTop from '../components/ScrollToTop';
-import MetaTags from '../components/MetaTags';
+import MainLayout from '@/layouts/MainLayout';
+import AuthLayout from '@/layouts/AuthLayout';
+import { ProtectedRoute, AdminRoute } from '@/routes/ProtectedRoutes';
+import ScrollToTop from '@/components/ui/ScrollToTop';
+import MetaTags from '@/components/ui/MetaTags';
+import PageLoader from '@/components/ui/PageLoader';
 
 // Lazy load pages
-const HomePage = React.lazy(() => import('../pages/HomePage'));
-const ShopPage = React.lazy(() => import('../pages/ShopPage'));
-const SalePage = React.lazy(() => import('../pages/SalePage'));
-const ProductDetailPage = React.lazy(() => import('../pages/ProductDetailPage'));
-const CartPage = React.lazy(() => import('../pages/CartPage'));
-const WishlistPage = React.lazy(() => import('../pages/WishlistPage'));
-const CheckoutPage = React.lazy(() => import('../pages/CheckoutPage'));
-const OrderPage = React.lazy(() => import('../pages/OrderPage'));
-const ProfilePage = React.lazy(() => import('../pages/ProfilePage'));
-const NotFound = React.lazy(() => import('../pages/NotFound'));
+const HomePage = React.lazy(() => import('@/pages/shop/HomePage'));
+const ShopPage = React.lazy(() => import('@/pages/shop/ShopPage'));
+const SalePage = React.lazy(() => import('@/pages/shop/SalePage'));
+const ProductDetailPage = React.lazy(() => import('@/pages/shop/ProductDetailPage'));
+const CartPage = React.lazy(() => import('@/pages/checkout/CartPage'));
+const WishlistPage = React.lazy(() => import('@/pages/user/WishlistPage'));
+const CheckoutPage = React.lazy(() => import('@/pages/checkout/CheckoutPage'));
+const OrderPage = React.lazy(() => import('@/pages/checkout/OrderPage'));
+const ProfilePage = React.lazy(() => import('@/pages/user/ProfilePage'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
 // Support
-const FAQPage = React.lazy(() => import('../pages/support/FAQPage'));
-const ShippingPage = React.lazy(() => import('../pages/support/ShippingPage'));
-const ContactPage = React.lazy(() => import('../pages/support/ContactPage'));
-const SizeGuidePage = React.lazy(() => import('../pages/support/SizeGuidePage'));
+const FAQPage = React.lazy(() => import('@/pages/support/FAQPage'));
+const ShippingPage = React.lazy(() => import('@/pages/support/ShippingPage'));
+const ContactPage = React.lazy(() => import('@/pages/support/ContactPage'));
+const SizeGuidePage = React.lazy(() => import('@/pages/support/SizeGuidePage'));
 
 // Legal
-const PrivacyPage = React.lazy(() => import('../pages/legal/PrivacyPage'));
-const TermsPage = React.lazy(() => import('../pages/legal/TermsPage'));
+const PrivacyPage = React.lazy(() => import('@/pages/legal/PrivacyPage'));
+const TermsPage = React.lazy(() => import('@/pages/legal/TermsPage'));
 
 // Admin
-const DashboardScreen = React.lazy(() => import('../pages/admin/DashboardScreen'));
-const ProductListScreen = React.lazy(() => import('../pages/admin/ProductListScreen'));
-const OrderListScreen = React.lazy(() => import('../pages/admin/OrderListScreen'));
-const UserListScreen = React.lazy(() => import('../pages/admin/UserListScreen'));
-const ProductEditScreen = React.lazy(() => import('../pages/admin/ProductEditScreen'));
-const AdminLayout = React.lazy(() => import('../components/admin/AdminLayout'));
-const LoginPage = React.lazy(() => import('../pages/LoginPage'));
+const DashboardScreen = React.lazy(() => import('@/pages/admin/DashboardScreen'));
+const ProductListScreen = React.lazy(() => import('@/pages/admin/ProductListScreen'));
+const OrderListScreen = React.lazy(() => import('@/pages/admin/OrderListScreen'));
+const UserListScreen = React.lazy(() => import('@/pages/admin/UserListScreen'));
+const ProductEditScreen = React.lazy(() => import('@/pages/admin/ProductEditScreen'));
+const AdminLayout = React.lazy(() => import('@/components/admin/AdminLayout'));
+const LoginPage = React.lazy(() => import('@/pages/user/LoginPage'));
 
-// Loading spinner — matches auth page background
-const PageLoader = () => (
-    <div className="min-h-screen flex justify-center items-center bg-[#f2f0ed]">
-        <div className="w-8 h-8 border-2 border-[#0a0a0a] border-t-transparent rounded-full animate-spin" />
-    </div>
-);
 
 const AppRouter = () => {
     return (
@@ -84,7 +79,8 @@ const AppRouter = () => {
                         {/* Protected User Routes */}
                         <Route element={<ProtectedRoute />}>
                             <Route path="checkout" element={<CheckoutPage />} />
-                            <Route path="order/:orderId" element={<OrderPage />} />
+                            <Route path="account/orders" element={<ProfilePage />} />
+                            <Route path="account/orders/:id" element={<OrderPage />} />
                             <Route path="profile" element={<ProfilePage />} />
                         </Route>
                     </Route>

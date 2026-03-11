@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import api from '../../services/api';
-import type { Order } from '../../types';
+import api from '@/services/api';
+import type { Order } from '@/types';
 
 interface OrderState {
     orders: Order[];
@@ -124,7 +124,7 @@ export const cancelOrder = createAsyncThunk(
     'orders/cancel',
     async ({ id, reason, note }: { id: string, reason: string, note?: string }, { rejectWithValue }) => {
         try {
-            const { data } = await api.put(`/orders/${id}/cancel`, { reason, note });
+            const { data } = await api.patch(`/orders/${id}/cancel`, { reason, note });
             return data;
         } catch (error: any) {
             return rejectWithValue(

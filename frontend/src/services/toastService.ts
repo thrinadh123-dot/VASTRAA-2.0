@@ -1,6 +1,6 @@
 import React from 'react';
 import { toast, type ToastOptions } from 'react-toastify';
-import CustomToast from '../components/CustomToast';
+import CustomToast from '@/components/ui/CustomToast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,10 +61,11 @@ const normalizeActions = (
 
 const renderToast = (
     message: string,
+    type: ToastType,
     actions: ToastAction[],
     closeToast?: () => void
 ) =>
-    React.createElement(CustomToast, { message, actions, closeToast });
+    React.createElement(CustomToast, { message, type, actions, closeToast });
 
 // ─── Core notify ─────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ const notify = (message: string, options: NotifyOptions = {}): void => {
         existing.message = newMessage;
 
         toast.update(existing.id, {
-            render: ({ closeToast }) => renderToast(newMessage, actions, closeToast),
+            render: ({ closeToast }) => renderToast(newMessage, type, actions, closeToast),
         });
         return;
     }
@@ -111,7 +112,7 @@ const notify = (message: string, options: NotifyOptions = {}): void => {
     };
 
     const id = toast(
-        ({ closeToast }) => renderToast(message, actions, closeToast),
+        ({ closeToast }) => renderToast(message, type, actions, closeToast),
         toastOptions
     );
 

@@ -21,12 +21,14 @@ const orderSchema = new mongoose.Schema({
     },
     orderItems: [orderItemSchema],
     shippingAddress: {
-        fullName: { type: String, required: true },
+        name: { type: String, required: true },
         phone: { type: String, required: true },
-        address: { type: String, required: true },
+        addressLine1: { type: String, required: true },
+        addressLine2: { type: String },
         city: { type: String, required: true },
-        pincode: { type: String, required: true },
         state: { type: String, required: true },
+        postalCode: { type: String, required: true },
+        country: { type: String, default: 'India' },
     },
     paymentMethod: {
         type: String,
@@ -68,15 +70,23 @@ const orderSchema = new mongoose.Schema({
     },
     deliveredAt: Date,
     transactionId: String,
-    cancellationReason: {
-        type: String,
-        enum: ['Ordered by mistake', 'Found cheaper elsewhere', 'Delivery time too long', 'Wrong size selected', 'Changed my mind', 'Other'],
-    },
-    cancellationNote: String,
     cancelledAt: Date,
     cancelledBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+    },
+    cancelReason: {
+        type: String,
+        enum: [
+            'ordered_by_mistake',
+            'found_cheaper',
+            'delivery_too_slow',
+            'changed_mind',
+            'other'
+        ],
+    },
+    cancelNote: {
+        type: String,
     },
     refundStatus: {
         type: String,

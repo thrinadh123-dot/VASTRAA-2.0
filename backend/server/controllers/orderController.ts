@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Order from '../models/Order';
-import Cart from '../models/Cart';
-import Product from '../models/Product';
+import { orderService } from '../services/orderService';
 import asyncHandler from 'express-async-handler';
 import { ApiResponseHandler } from '../utils/apiResponse';
 
@@ -31,7 +29,7 @@ export const createOrder = asyncHandler(async (req: any, res: Response) => {
             return ApiResponseHandler.error(res, `Invalid product ID: ${item.product}`, 400);
         }
 
-        const product = await Product.findById(item.product);
+        const product = await orderService.getProductForOrder(item.product);
 
         // Step 2B: Verify Product Exists
         if (!product) {
@@ -58,9 +56,7 @@ export const createOrder = asyncHandler(async (req: any, res: Response) => {
 
     // Process Stock Decrement (Step 3 - Finalize)
     for (const item of validatedItems) {
-        await Product.findByIdAndUpdate(item.product, {
-            $inc: { stock: -item.quantity }
-        });
+        await orderService.decreaseProductStock(item.product, item.quantity);
     }
 
     const shippingPrice = itemsPrice > 1000 ? 0 : 100;
@@ -68,16 +64,18 @@ export const createOrder = asyncHandler(async (req: any, res: Response) => {
     const totalAmount = itemsPrice + shippingPrice + taxPrice;
 
     // Step 5: Create Order Safely
-    const order = new Order({
+    const order: any = {
         user: (req as any).user._id,
         orderItems: validatedItems,
         shippingAddress: {
-            fullName: shippingAddress.fullName || `${shippingAddress.firstName} ${shippingAddress.lastName}`,
+            name: shippingAddress.name || `${shippingAddress.firstName} ${shippingAddress.lastName}`,
             phone: shippingAddress.phone,
-            address: shippingAddress.address,
+            addressLine1: shippingAddress.addressLine1 || shippingAddress.address,
+            addressLine2: shippingAddress.addressLine2,
             city: shippingAddress.city,
-            pincode: shippingAddress.pincode || shippingAddress.postalCode,
-            state: shippingAddress.state || 'N/A'
+            state: shippingAddress.state || 'N/A',
+            postalCode: shippingAddress.postalCode || shippingAddress.pincode,
+            country: shippingAddress.country || 'India',
         },
         paymentMethod,
         itemsPrice,
@@ -88,18 +86,16 @@ export const createOrder = asyncHandler(async (req: any, res: Response) => {
         paymentStatus: transactionId ? 'Paid' : 'Pending',
         status: 'processing',
         transactionId,
-    });
+    };
 
-    const createdOrder = await order.save();
+    const OrderModel = (await import('../models/Order')).default;
+    const newOrder = new OrderModel(order);
+    const createdOrder = await newOrder.save();
 
-    // Clear the cart after successful order
-    const cart = await Cart.findOne({ userId: (req as any).user._id });
-    if (cart) {
-        cart.items = [];
-        await cart.save();
-    }
+    // Clear user's cart in DB after successful order
+    await orderService.clearUserCart((req as any).user._id);
 
-    return ApiResponseHandler.created(res, createdOrder, 'Order created successfully');
+    return ApiResponseHandler.success(res, createdOrder, 'Order created successfully', 201);
 });
 
 /**
@@ -108,9 +104,7 @@ export const createOrder = asyncHandler(async (req: any, res: Response) => {
  * @access  Private
  */
 export const getOrderById = asyncHandler(async (req: any, res: Response) => {
-    const order = await Order.findById(req.params.id)
-        .populate('user', 'username email')
-        .populate('orderItems.product');
+    const order = await orderService.getOrderById(req.params.id);
 
     if (!order) {
         return ApiResponseHandler.notFound(res, 'Order not found');
@@ -130,7 +124,7 @@ export const getOrderById = asyncHandler(async (req: any, res: Response) => {
  * @access  Private
  */
 export const getMyOrders = asyncHandler(async (req: any, res: Response) => {
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const orders = await orderService.getOrdersByUser(req.user._id);
     return ApiResponseHandler.success(res, orders, 'Orders retrieved successfully');
 });
 
@@ -140,7 +134,7 @@ export const getMyOrders = asyncHandler(async (req: any, res: Response) => {
  * @access  Private/Admin
  */
 export const getOrders = asyncHandler(async (req: Request, res: Response) => {
-    const orders = await Order.find({}).populate('user', 'username email').sort({ createdAt: -1 });
+    const orders = await orderService.getAllOrders();
     return ApiResponseHandler.success(res, orders, 'All orders retrieved successfully');
 });
 
@@ -151,7 +145,7 @@ export const getOrders = asyncHandler(async (req: Request, res: Response) => {
  */
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
     const { status } = req.body;
-    const order = await Order.findById(req.params.id);
+    const order = await orderService.findOrderById(req.params.id as string);
 
     if (!order) {
         return ApiResponseHandler.notFound(res, 'Order not found');
@@ -177,7 +171,7 @@ export const cancelOrder = asyncHandler(async (req: any, res: Response) => {
         return ApiResponseHandler.error(res, 'Cancellation reason is required', 400);
     }
 
-    const order = await Order.findById(req.params.id);
+    const order = await orderService.findOrderById(req.params.id);
 
     if (!order) {
         return ApiResponseHandler.notFound(res, 'Order not found');
@@ -189,20 +183,23 @@ export const cancelOrder = asyncHandler(async (req: any, res: Response) => {
     }
 
     // 2. Validation: Reject if already shipped/delivered or cancelled
-    const restrictedStatuses = ['shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+    if (order.status === 'cancelled') {
+        return ApiResponseHandler.error(res, 'Order already cancelled', 400);
+    }
+
+    const restrictedStatuses = ['shipped', 'out_for_delivery', 'delivered'];
     if (restrictedStatuses.includes(order.status)) {
         return ApiResponseHandler.error(res, `Cannot cancel order in ${order.status} state`, 400);
     }
 
     // 3. Capture Reason & Details
     order.status = 'cancelled';
-    order.cancellationReason = reason;
-    order.cancellationNote = note || '';
+    order.cancelReason = reason;
+    order.cancelNote = note || '';
     order.cancelledAt = new Date();
     order.cancelledBy = (req as any).user._id;
 
     // 4. Refund Simulation
-    // If it was paid (Prepaid), initiate refund. If COD (Pending), no refund.
     if (order.paymentStatus === 'Paid') {
         order.refundStatus = 'Initiated';
     } else {
@@ -211,9 +208,7 @@ export const cancelOrder = asyncHandler(async (req: any, res: Response) => {
 
     // 5. Restore Inventory Stock
     for (const item of order.orderItems) {
-        await Product.findByIdAndUpdate(item.product, {
-            $inc: { stock: item.quantity }
-        });
+        await orderService.increaseProductStock(item.product.toString(), item.quantity);
     }
 
     const updatedOrder = await order.save();
@@ -226,7 +221,7 @@ export const cancelOrder = asyncHandler(async (req: any, res: Response) => {
  * @access  Private
  */
 export const reorder = asyncHandler(async (req: any, res: Response) => {
-    const order = await Order.findById(req.params.id);
+    const order = await orderService.findOrderById(req.params.id);
 
     if (!order) {
         return ApiResponseHandler.notFound(res, 'Order not found');
@@ -239,15 +234,20 @@ export const reorder = asyncHandler(async (req: any, res: Response) => {
     }
 
     // Add items to user's cart
-    const cart = await Cart.findOne({ userId: (req as any).user._id });
+    // Try fetching the cart, avoiding Cart import if possible
+    const CartModel = (await import('../models/Cart')).default;
+    const cart = await CartModel.findOne({ userId: (req as any).user._id });
     if (!cart) {
         return ApiResponseHandler.error(res, 'Cart not found', 404);
     }
 
     for (const item of order.orderItems) {
         const productIndex = cart.items.findIndex((i: any) => i.product.toString() === item.product.toString() && i.size === item.size);
-        if (productIndex > -1) {
-            cart.items[productIndex].quantity += item.quantity;
+        if (productIndex > -1 && cart.items) {
+            const cartItem = cart.items[productIndex];
+            if (cartItem) {
+                cartItem.quantity += item.quantity;
+            }
         } else {
             cart.items.push({
                 product: item.product,

@@ -34,5 +34,14 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-  }
+  },
+  "include": [
+    "server/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "scripts",
+    "*.ts"
+  ]
 }

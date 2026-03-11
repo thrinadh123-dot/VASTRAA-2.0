@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiSave, FiImage, FiPackage, FiLayers, FiTag } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import { getProductDetails, updateProduct, resetProductState, clearProductDetails } from '../../redux/slices/productSlice';
-import type { AppDispatch, RootState } from '../../redux';
+import { getProductDetails, updateProduct, resetProductState, clearProductDetails } from '@/redux/slices/productSlice';
+import type { AppDispatch, RootState } from '@/redux';
 
 const ProductEditScreen = () => {
     const { id: productId } = useParams();

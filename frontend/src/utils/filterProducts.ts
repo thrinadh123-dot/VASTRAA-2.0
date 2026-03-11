@@ -1,4 +1,4 @@
-import type { Product } from '../data/types';
+import type { Product } from '@/types';
 
 /* ─── Style filter registry ─────────────────────────────────────────────────
  * Each key is the URL ?style= value.
@@ -24,6 +24,22 @@ export interface StyleFilterDef {
 }
 
 export const STYLE_FILTER_REGISTRY: Record<string, StyleFilterDef> = {
+    casual: {
+        label: 'Casual',
+        tags: ['casual'],
+    },
+    party: {
+        label: 'Party',
+        tags: ['party'],
+    },
+    formal: {
+        label: 'Formal',
+        tags: ['formal'],
+    },
+    ethnic: {
+        label: 'Ethnic',
+        tags: ['ethnic'],
+    },
     summer: {
         label: 'Summer Edit',
         seasons: ['summer'],
@@ -41,10 +57,6 @@ export const STYLE_FILTER_REGISTRY: Record<string, StyleFilterDef> = {
     new: {
         label: 'New Drops',
         newDrop: true,
-    },
-    formal: {
-        label: 'Formal Edit',
-        tags: ['formal'],
     },
     winter: {
         label: 'Winter Edit',
@@ -81,7 +93,7 @@ export interface FilterOptions {
  * Sorting is handled separately in the component.
  */
 export function filterProducts(products: Product[], opts: FilterOptions): Product[] {
-    let list = [...products];
+    let list = Array.isArray(products) ? [...products] : [];
 
     // 1. Category
     if (opts.category && opts.category !== 'All') {

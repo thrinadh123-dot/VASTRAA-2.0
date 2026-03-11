@@ -9,7 +9,7 @@ router.route('/my-orders').get(protect, getMyOrders);
 router.route('/').post(protect, createOrder).get(protect, authorize('admin'), getOrders);
 router.route('/:id').get(protect, getOrderById);
 router.route('/:id/status').put(protect, authorize('admin'), updateOrderStatus);
-router.route('/:id/cancel').put(protect, cancelOrder);
+router.route('/:id/cancel').patch(protect, cancelOrder);
 router.route('/:id/reorder').post(protect, reorder);
 
 export default router;

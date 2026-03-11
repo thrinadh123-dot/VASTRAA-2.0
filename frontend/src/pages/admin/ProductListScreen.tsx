@@ -3,14 +3,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import { listProducts, deleteProduct, createProduct, resetProductState } from '../../redux/slices/productSlice';
-import type { AppDispatch, RootState } from '../../redux';
+import { listProducts, deleteProduct, createProduct, resetProductState } from '@/redux/slices/productSlice';
+import type { AppDispatch, RootState } from '@/redux';
+import type { Product } from '@/types';
 
 const ProductListScreen = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
 
-    const { products, loading, success } = useSelector((state: RootState) => state.products);
+    const { products: rawProducts, loading, success } = useSelector((state: RootState) => state.products);
+    const products = Array.isArray(rawProducts) ? rawProducts : (rawProducts as any)?.products || [];
 
     useEffect(() => {
         dispatch(listProducts('')); // Pass empty string to satisfy arg requirement
@@ -72,7 +74,7 @@ const ProductListScreen = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {products.map((product) => (
+                            {products.map((product: Product) => (
                                 <tr key={product._id} className="hover:bg-gray-50/50 transition-colors group">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center space-x-4">

@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../../redux';
+import type { RootState } from '@/redux';
 
 const AdminRoute = () => {
     const { userInfo, loading } = useSelector((state: RootState) => state.auth);

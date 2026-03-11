@@ -1,24 +1,24 @@
 import express from 'express';
 import {
-    addAddress,
-    updateAddress,
-    deleteAddress,
+    addUserAddress,
+    updateUserAddress,
+    deleteUserAddress,
     setDefaultAddress,
-    getAddresses
+    getUserAddresses
 } from '../controllers/userController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
 router.route('/addresses')
-    .get(protect, getAddresses)
-    .post(protect, addAddress);
+    .get(protect, getUserAddresses)
+    .post(protect, addUserAddress);
 
 router.route('/addresses/:id')
-    .put(protect, updateAddress)
-    .delete(protect, deleteAddress);
+    .put(protect, updateUserAddress)
+    .delete(protect, deleteUserAddress);
 
 router.route('/addresses/:id/default')
-    .put(protect, setDefaultAddress);
+    .patch(protect, setDefaultAddress);
 
 export default router;

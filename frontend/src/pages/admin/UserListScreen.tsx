@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FiTrash2, FiUser, FiShield, FiMail } from 'react-icons/fi';
-import { listUsers, deleteUser, updateUserRole, resetAuthState } from '../../redux/slices/authSlice';
-import type { AppDispatch, RootState } from '../../redux';
+import { listUsers, deleteUser, updateUserRole, resetAuthState } from '@/redux/slices/authSlice';
+import type { AppDispatch, RootState } from '@/redux';
 import { toast } from 'react-toastify';
 
 const UserListScreen = () => {
